@@ -27,32 +27,42 @@ class _LocationSelectionSheetState
   @override
   void initState() {
     super.initState();
-    _determinePosition();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final selectedLocation =
+          ref.read(locationNotifierProvider).selectedLocation;
+      if (selectedLocation != null) {
+        _animateToLocation(selectedLocation);
+      } else {
+        _determinePosition();
+      }
+    });
   }
 
-  Future<void> _determinePosition() async {
+  Future<LatLng?> _determinePosition() async {
     bool serviceEnabled;
     LocationPermission permission;
 
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      return;
+      return null;
     }
 
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        return;
+        return null;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      return;
+      return null;
     }
 
     Position position = await Geolocator.getCurrentPosition();
-    _animateToLocation(LatLng(position.latitude, position.longitude));
+    LatLng latLng = LatLng(position.latitude, position.longitude);
+    _animateToLocation(latLng);
+    return latLng;
   }
 
   Future<void> _animateToLocation(LatLng latLng) async {
@@ -85,6 +95,16 @@ class _LocationSelectionSheetState
 
   @override
   Widget build(BuildContext context) {
+    final locationState = ref.watch(locationNotifierProvider);
+
+    ref.listen(locationNotifierProvider, (previous, next) {
+      if (next.error != null && next.error != previous?.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(next.error!)),
+        );
+      }
+    });
+
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: const BoxDecoration(
@@ -127,8 +147,10 @@ class _LocationSelectionSheetState
               children: [
                 GoogleMap(
                   mapType: MapType.normal,
-                  initialCameraPosition: const CameraPosition(
-                    target: LatLng(37.42796133580664, -122.085749655962),
+                  initialCameraPosition: CameraPosition(
+                    target:
+                        ref.read(locationNotifierProvider).selectedLocation ??
+                            const LatLng(37.42796133580664, -122.085749655962),
                     zoom: 14.4746,
                   ),
                   onMapCreated: (GoogleMapController controller) {
@@ -166,16 +188,26 @@ class _LocationSelectionSheetState
               children: [
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {
-                      _determinePosition();
-                      _confirmLocation(_center);
-                    },
+                    onPressed: locationState.isLoading
+                        ? null
+                        : () async {
+                            final latLng = await _determinePosition();
+                            if (latLng != null) {
+                              _confirmLocation(latLng);
+                            }
+                          },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.grey[200],
                       foregroundColor: Colors.black,
                       padding: const EdgeInsets.symmetric(vertical: 15),
                     ),
-                    child: const Text('Use Current Location'),
+                    child: locationState.isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Use Current Location'),
                   ),
                 ),
                 const Gap(10),

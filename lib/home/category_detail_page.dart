@@ -48,7 +48,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
       await ref
           .read(mealNotifierProvider.notifier)
           .getMealList(category: widget.category);
-      ref.read(randomProvider.notifier).update((state) => false);
+      ref.read(randomProvider.notifier).update((state) => true);
     });
     super.initState();
   }
@@ -61,7 +61,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(mealNotifierProvider);
+    final mealState = ref.watch(mealNotifierProvider);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -70,12 +70,12 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
           onTap: () {
             context.pop();
           },
-          child: Icon(
+          child: const Icon(
             Icons.arrow_back,
             color: Colors.white,
           ),
         ),
-        title: Text(
+        title: const Text(
           'Category Page',
           style: TextStyle(color: Colors.white),
         ),
@@ -83,7 +83,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
           GestureDetector(
             onTap: () async {
               ref.read(randomProvider.notifier).update((state) => !state);
-              if (ref.watch(randomProvider) == true) {
+              if (ref.read(randomProvider) == true) {
                 await ref
                     .read(mealNotifierProvider.notifier)
                     .getMealList(category: widget.category);
@@ -93,10 +93,10 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
             },
             child: Text(
               ref.watch(randomProvider) ? 'Random' : 'Clear',
-              style: TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white),
             ),
           ),
-          Gap(15)
+          const Gap(15)
         ],
         centerTitle: true,
       ),
@@ -106,11 +106,11 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Meals',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
               ),
-              Gap(15),
+              const Gap(15),
               TextFormField(
                 controller: searchCtrl,
                 onChanged: (v) {
@@ -126,48 +126,54 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
                     }
                   });
                 },
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                     border: OutlineInputBorder(), hintText: 'Search'),
               ),
-              Gap(15),
-              Wrap(
-                spacing: 12,
-                runSpacing: 10,
-                children: List.generate(
-                    state.length,
-                    (index) => GestureDetector(
-                          onTap: () {
-                            context.pushRoute(MealDetailRoute(
-                                mealId:
-                                    int.tryParse(state[index].idMeal) ?? 0));
-                          },
-                          child: Container(
-                            height: 210,
-                            width: 170,
-                            decoration: BoxDecoration(
-                                color: Colors.white,
-                                border: Border.all(),
-                                borderRadius: BorderRadius.circular(13)),
-                            child: Column(
-                              children: [
-                                SizedBox(
-                                  height: 160,
-                                  width: 130,
-                                  child: Image.network(
-                                      fit: BoxFit.fill,
-                                      state[index].strMealThumb),
-                                ),
-                                Gap(10),
-                                Text(
-                                  state[index].strMeal,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(fontSize: 16),
-                                )
-                              ],
+              const Gap(15),
+              if (mealState.isLoading)
+                const Center(child: CircularProgressIndicator())
+              else if (mealState.error != null)
+                Center(child: Text(mealState.error!))
+              else
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 10,
+                  children: List.generate(
+                      mealState.meals.length,
+                      (index) => GestureDetector(
+                            onTap: () {
+                              context.pushRoute(MealDetailRoute(
+                                  mealId: int.tryParse(
+                                          mealState.meals[index].idMeal) ??
+                                      0));
+                            },
+                            child: Container(
+                              height: 210,
+                              width: 170,
+                              decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  border: Border.all(),
+                                  borderRadius: BorderRadius.circular(13)),
+                              child: Column(
+                                children: [
+                                  SizedBox(
+                                    height: 160,
+                                    width: 130,
+                                    child: Image.network(
+                                        fit: BoxFit.fill,
+                                        mealState.meals[index].strMealThumb),
+                                  ),
+                                  const Gap(10),
+                                  Text(
+                                    mealState.meals[index].strMeal,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontSize: 16),
+                                  )
+                                ],
+                              ),
                             ),
-                          ),
-                        )),
-              )
+                          )),
+                )
             ],
           ),
         ),

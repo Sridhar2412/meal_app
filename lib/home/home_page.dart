@@ -29,56 +29,66 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(categoryNotifierProvider);
+    final categoryState = ref.watch(categoryNotifierProvider);
     final locationState = ref.watch(locationNotifierProvider);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.red,
-        title: Text(
-          'Home Page',
-          style: TextStyle(color: Colors.white),
-        ),
-        leading: SizedBox(),
-        centerTitle: true,
-        actions: [
-          GestureDetector(
+        leadingWidth: MediaQuery.of(context).size.width * 0.40,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 10),
+          child: GestureDetector(
             onTap: () {
               showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,
                   backgroundColor: Colors.transparent,
-                  builder: (context) => LocationSelectionSheet());
+                  builder: (context) => const LocationSelectionSheet());
             },
             child: Row(
               children: [
-                Icon(Icons.location_on, color: Colors.white, size: 20),
-                Gap(5),
+                const Icon(Icons.location_on, color: Colors.white, size: 20),
+                const Gap(5),
                 Container(
-                  constraints: BoxConstraints(maxWidth: 100),
-                  child: Text(
-                    locationState.selectedAddress ?? 'Select Location',
-                    style: TextStyle(color: Colors.white, fontSize: 12),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  constraints: const BoxConstraints(maxWidth: 100),
+                  child: locationState.isLoading
+                      ? const SizedBox(
+                          height: 15,
+                          width: 15,
+                          child: CircularProgressIndicator(
+                            color: Colors.red,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          locationState.selectedAddress ?? 'Select Location',
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 12),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                 ),
               ],
             ),
           ),
-          Gap(15),
+        ),
+        centerTitle: true,
+        actions: [
           GestureDetector(
               onTap: () async {
                 SharedPreferences prefs = await SharedPreferences.getInstance();
                 await prefs.remove('isLoggedIn');
                 await prefs.remove('currentUser');
                 await GoogleSignIn().signOut();
-                context.replaceRoute(LoginRoute());
+                if (context.mounted) {
+                  context.replaceRoute(const LoginRoute());
+                }
               },
-              child: Icon(
+              child: const Icon(
                 Icons.logout,
                 color: Colors.white,
               )),
-          Gap(10)
+          const Gap(10)
         ],
       ),
       body: Padding(
@@ -87,47 +97,54 @@ class _HomePageState extends ConsumerState<HomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Categories',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
               ),
-              Gap(15),
-              Wrap(
-                spacing: 12,
-                runSpacing: 10,
-                children: List.generate(
-                    state.length,
-                    (index) => GestureDetector(
-                          onTap: () {
-                            context.pushRoute(CategoryDetailRoute(
-                                category: state[index].strCategory));
-                          },
-                          child: Container(
-                            height: 170,
-                            width: 170,
-                            decoration: BoxDecoration(
-                                color: Colors.white,
-                                border: Border.all(),
-                                borderRadius: BorderRadius.circular(13)),
-                            child: Column(
-                              children: [
-                                SizedBox(
-                                  height: 120,
-                                  width: 120,
-                                  child: Image.network(
-                                      fit: BoxFit.fill,
-                                      state[index].strCategoryThumb),
-                                ),
-                                Gap(10),
-                                Text(
-                                  state[index].strCategory,
-                                  style: TextStyle(fontSize: 16),
-                                )
-                              ],
+              const Gap(15),
+              if (categoryState.isLoading)
+                const Center(child: CircularProgressIndicator())
+              else if (categoryState.error != null)
+                Center(child: Text(categoryState.error!))
+              else
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 10,
+                  children: List.generate(
+                      categoryState.categories.length,
+                      (index) => GestureDetector(
+                            onTap: () {
+                              context.pushRoute(CategoryDetailRoute(
+                                  category: categoryState
+                                      .categories[index].strCategory));
+                            },
+                            child: Container(
+                              height: 170,
+                              width: 170,
+                              decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  border: Border.all(),
+                                  borderRadius: BorderRadius.circular(13)),
+                              child: Column(
+                                children: [
+                                  SizedBox(
+                                    height: 120,
+                                    width: 120,
+                                    child: Image.network(
+                                        fit: BoxFit.fill,
+                                        categoryState.categories[index]
+                                            .strCategoryThumb),
+                                  ),
+                                  const Gap(10),
+                                  Text(
+                                    categoryState.categories[index].strCategory,
+                                    style: const TextStyle(fontSize: 16),
+                                  )
+                                ],
+                              ),
                             ),
-                          ),
-                        )),
-              )
+                          )),
+                )
             ],
           ),
         ),

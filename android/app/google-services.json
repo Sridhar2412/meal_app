@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "671940715102",
+    "project_id": "meal-app-task-b2519",
+    "storage_bucket": "meal-app-task-b2519.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:671940715102:android:8fdd2e7c45e65dab1acacf",
+        "android_client_info": {
+          "package_name": "com.example.meal_task_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "671940715102-gg65gn6jipg9biqlo1a5lnouu53s5p01.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4q79Aa6voCvNILIwihvP--Be-vYQneBE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "671940715102-gg65gn6jipg9biqlo1a5lnouu53s5p01.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

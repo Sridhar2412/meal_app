@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:meal_task_app/routes/app_route.gr.dart';
+import 'package:meal_task_app/src/shared/gen/assets.gen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 @RoutePage()
@@ -101,12 +102,21 @@ class _LoginPageState extends State<LoginPage> {
                   'Login',
                   style: TextStyle(color: Colors.white),
                 )),
-            Gap(15),
+            Gap(25),
             GestureDetector(
                 onTap: () async {
                   await googleLogin();
                 },
-                child: Image.asset('assets/svg/google.svg'))
+                child: Container(
+                    decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(100)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(3),
+                      child: CircleAvatar(
+                          backgroundColor: Colors.white,
+                          child: Assets.svg.google.svg()),
+                    )))
           ],
         ),
       ),

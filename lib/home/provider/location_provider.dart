@@ -9,21 +9,25 @@ class LocationState {
   final LatLng? selectedLocation;
   final String? selectedAddress;
   final bool isLoading;
+  final String? error;
 
   LocationState({
     this.selectedLocation,
     this.selectedAddress,
     this.isLoading = false,
+    this.error,
   });
 
   LocationState copyWith({
     LatLng? selectedLocation,
     String? selectedAddress,
     bool? isLoading,
+    String? error,
   }) {
     return LocationState(
       selectedLocation: selectedLocation ?? this.selectedLocation,
       selectedAddress: selectedAddress ?? this.selectedAddress,
+      error: error ?? this.error,
       isLoading: isLoading ?? this.isLoading,
     );
   }
@@ -37,14 +41,15 @@ class LocationNotifier extends _$LocationNotifier {
   }
 
   Future<void> getCurrentLocation() async {
-    state = state.copyWith(isLoading: true);
+    state = state.copyWith(isLoading: true, error: null);
     try {
       bool serviceEnabled;
       LocationPermission permission;
 
       serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        state = state.copyWith(isLoading: false);
+        state = state.copyWith(
+            isLoading: false, error: 'Location services are disabled.');
         return;
       }
 
@@ -52,13 +57,17 @@ class LocationNotifier extends _$LocationNotifier {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          state = state.copyWith(isLoading: false);
+          state = state.copyWith(
+              isLoading: false, error: 'Location permissions are denied');
           return;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        state = state.copyWith(isLoading: false);
+        state = state.copyWith(
+            isLoading: false,
+            error:
+                'Location permissions are permanently denied, we cannot request permissions.');
         return;
       }
 
@@ -82,12 +91,12 @@ class LocationNotifier extends _$LocationNotifier {
         isLoading: false,
       );
     } catch (e) {
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
   Future<void> setSelectedLocation(LatLng latLng) async {
-    state = state.copyWith(isLoading: true);
+    state = state.copyWith(isLoading: true, error: null);
     try {
       List<Placemark> placemarks = await placemarkFromCoordinates(
         latLng.latitude,
@@ -97,7 +106,7 @@ class LocationNotifier extends _$LocationNotifier {
       String address = '';
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
-        address = '${place.name}, ${place.locality}';
+        address = '${place.locality}, ${place.country}';
       }
 
       state = state.copyWith(
@@ -109,6 +118,7 @@ class LocationNotifier extends _$LocationNotifier {
       state = state.copyWith(
         selectedLocation: latLng,
         isLoading: false,
+        error: e.toString(),
       );
     }
   }

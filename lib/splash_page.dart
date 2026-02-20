@@ -24,8 +24,6 @@ class _SplashPageState extends State<SplashPage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
 
-    if (!mounted) return;
-
     if (isLoggedIn) {
       context.replaceRoute(const HomeRoute());
     } else {
@@ -36,11 +34,12 @@ class _SplashPageState extends State<SplashPage> {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.red,
       body: Center(
         child: Text(
-          "Meal Task App",
-          style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+          "Meal App",
+          style: TextStyle(
+              fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white),
         ),
       ),
     );
